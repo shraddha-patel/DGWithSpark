@@ -16,7 +16,6 @@
 
 package org.finra.datagenerator.engine.scxml;
 
-import org.apache.commons.lang.ObjectUtils;
 import org.apache.commons.scxml.Context;
 import org.apache.commons.scxml.SCXMLExecutor;
 import org.apache.commons.scxml.SCXMLExpressionException;
@@ -28,7 +27,6 @@ import org.apache.commons.scxml.model.SCXML;
 import org.apache.commons.scxml.model.Transition;
 import org.apache.commons.scxml.model.TransitionTarget;
 import org.apache.log4j.Logger;
-import org.finra.datagenerator.consumer.DataConsumer;
 import org.finra.datagenerator.distributor.multithreaded.SingleThreadedProcessing;
 import org.finra.datagenerator.engine.Frontier;
 import org.finra.datagenerator.engine.scxml.tags.CustomTagExtension;
@@ -39,7 +37,6 @@ import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
 import java.util.Queue;
-import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.atomic.AtomicBoolean;
 
 /**
@@ -89,8 +86,9 @@ public class SCXMLFrontier extends SCXMLExecutor implements Frontier {
      * Performs a DFS on the model, starting from root, placing results in the queue
      * Just a public wrapper for private dfs function
      *
-     * @param singleThreadedProcessing
+     * @param singleThreadedProcessing Processing Strategy
      * @param flag used to stop the search before completion
+     * @throws IOException io exception
      */
     public void searchForScenarios(SingleThreadedProcessing singleThreadedProcessing, AtomicBoolean flag) throws IOException {
         dfs(singleThreadedProcessing, flag, root);
@@ -100,11 +98,12 @@ public class SCXMLFrontier extends SCXMLExecutor implements Frontier {
      * Performs a DFS on the model, starting from root, placing results in the queue
      * Just a public wrapper for private dfs function
      *
-     * @param queue
+     * @param queue the queue
      * @param flag used to stop the search before completion
+     * @throws IOException io exception
      */
     public void searchForScenarios(Queue<Map<String, String>> queue, AtomicBoolean flag) throws IOException {
-        dfs(queue,flag,root);
+        dfs(queue, flag, root);
     }
 
     private void dfs(SingleThreadedProcessing singleThreadedProcessing, AtomicBoolean flag, PossibleState state) throws IOException {

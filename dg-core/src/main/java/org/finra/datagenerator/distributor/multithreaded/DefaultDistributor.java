@@ -99,7 +99,7 @@ public class DefaultDistributor implements SearchDistributor {
         for (Frontier frontier : frontierList) {
 
             try {
-                frontier.searchForScenarios(new SingleThreadedProcessing(userDataOutput,maxNumberOfLines), searchExitFlag);
+                frontier.searchForScenarios(new SingleThreadedProcessing(userDataOutput, maxNumberOfLines), searchExitFlag);
             } catch (IOException e) {
                 e.printStackTrace();
             }

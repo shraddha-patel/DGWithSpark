@@ -18,7 +18,6 @@ package org.finra.datagenerator.distributor;
 import org.finra.datagenerator.consumer.DataConsumer;
 import org.finra.datagenerator.engine.Frontier;
 
-import java.io.IOException;
 import java.util.List;
 
 /**

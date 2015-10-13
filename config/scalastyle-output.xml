@@ -1,4 +1,7 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <checkstyle version="5.0">
-      
-    </checkstyle>
+ <file name="C:\Users\k25284\Desktop\Original\DataGenerator\dg-spark\src\main\code\org\finra\datagenerator\searchWorker.scala">
+  <error line="12" source="org.scalastyle.file.FileLineLengthChecker" severity="warning" message="File line length exceeds 160 characters"/>
+  <error column="6" line="18" source="org.scalastyle.scalariform.MethodNamesChecker" severity="warning" message="Method name does not match the regular expression '^[a-z][A-Za-z0-9_]*(_=)?$'"/>
+ </file>
+</checkstyle>

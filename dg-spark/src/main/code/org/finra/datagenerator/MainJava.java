@@ -16,15 +16,11 @@
 
 package org.finra.datagenerator;
 
-import com.google.common.io.FileBackedOutputStream;
-import org.finra.datagenerator.consumer.DataConsumer;
-import org.finra.datagenerator.consumer.EquivalenceClassTransformer;
-import org.finra.datagenerator.distributor.multithreaded.DefaultDistributor;
 import org.finra.datagenerator.engine.scxml.SCXMLEngine;
-import org.finra.datagenerator.samples.transformer.SampleMachineTransformer;
-import org.finra.datagenerator.writer.DefaultWriter;
 
-import java.io.*;
+import java.io.Serializable;
+import java.io.InputStream;
+import java.io.IOException;
 
 /**
  * Simple "Random Number Data Generator" example using Apache Spark.

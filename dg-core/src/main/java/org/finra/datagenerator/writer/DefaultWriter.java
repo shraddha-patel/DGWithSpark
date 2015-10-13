@@ -19,7 +19,6 @@ import org.apache.log4j.Logger;
 import org.finra.datagenerator.consumer.DataPipe;
 
 import java.io.IOException;
-import java.io.ObjectOutputStream;
 import java.io.OutputStream;
 import java.io.Serializable;
 
@@ -28,7 +27,7 @@ import java.io.Serializable;
  *
  * Created by robbinbr on 5/28/2014.
  */
-public class DefaultWriter implements Serializable,DataWriter {
+public class DefaultWriter implements Serializable, DataWriter {
 
     /**
      * Logger
