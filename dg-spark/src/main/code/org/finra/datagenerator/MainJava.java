@@ -14,14 +14,17 @@
  * limitations under the License.
  */
 
-
 package org.finra.datagenerator;
 
-import java.io.File;
-import java.io.FileInputStream;
-import java.io.Serializable;
-import java.io.InputStream;
-import java.io.IOException;
+import com.google.common.io.FileBackedOutputStream;
+import org.finra.datagenerator.consumer.DataConsumer;
+import org.finra.datagenerator.consumer.EquivalenceClassTransformer;
+import org.finra.datagenerator.distributor.multithreaded.DefaultDistributor;
+import org.finra.datagenerator.engine.scxml.SCXMLEngine;
+import org.finra.datagenerator.samples.transformer.SampleMachineTransformer;
+import org.finra.datagenerator.writer.DefaultWriter;
+
+import java.io.*;
 
 /**
  * Simple "Random Number Data Generator" example using Apache Spark.
@@ -40,37 +43,28 @@ public final class MainJava implements Serializable {
      * @param argv Command-line arguments for the example
      * @throws IOException IO Exception
      */
+
     public static void main(String[] argv) throws IOException {
-
-        //You can define your own file "input.txt" in your directory with first line as "Total Count" and
-        //second line as "Number of Split"
-
-        //Read input data from file using File and InputStream
-        File file = new File("./dg-spark/src/main/resources/file/input.txt");
-
-        InputStream is = new FileInputStream(file);
+        
+        InputStream is = MainJava.class.getResourceAsStream("/samplemachine.xml");
 
         try {
-            //Create instance of EngineImplementation
-            RandomNumberEngine randomNumberEngine = new RandomNumberEngine();
+            SCXMLEngine scxmlEngine = new SCXMLEngine();
 
-            //Read the lines from text file
-            randomNumberEngine.setModelByInputFileStream(is);
+            scxmlEngine.setModelByInputFileStream(is);
+            scxmlEngine.setBootstrapMin(2);
 
-            //Define your host name here with port 7077 i.e hostname:7077
-            String masterURL = "spark://sandbox.hortonworks.com:7077";
+            String masterURL = "local[5]";
+            //String masterURL = "spark://sandbox.hortonworks.com:7077";
 
-            //Define Spark Context and Scala Data Consumer object
-            //SparkContext sparkContext = new SparkContext();
-            ScalaDataConsumer scalaDataConsumer = new ScalaDataConsumer();
+            SparkDistributor sparkDistributor = new SparkDistributor(masterURL);
 
-            //Create instance of SparkDistributor and set masterURL to Spark Context
-            SparkDistributor sparkDistributor = new SparkDistributor(masterURL, scalaDataConsumer);
+            sparkDistributor.setMaxNumberOfLines(100);
+            scxmlEngine.process(sparkDistributor);
 
-            //Generate data, distribute it and send it to data consumer
-            randomNumberEngine.process(sparkDistributor);
+
         } finally {
-            //Close the output Stream
+
             is.close();
         }
     }

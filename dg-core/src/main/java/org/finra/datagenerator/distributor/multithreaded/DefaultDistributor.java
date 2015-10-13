@@ -97,27 +97,16 @@ public class DefaultDistributor implements SearchDistributor {
         // Start search threads (producers)
         ExecutorService threadPool = Executors.newFixedThreadPool(threadCount);
         for (Frontier frontier : frontierList) {
+
+            try {
+                frontier.searchForScenarios(new SingleThreadedProcessing(userDataOutput,maxNumberOfLines), searchExitFlag);
+            } catch (IOException e) {
+                e.printStackTrace();
+            }
+
             Runnable worker = null;
             worker = new SearchWorker(frontier, queue, searchExitFlag);
             threadPool.execute(worker);
-        }
-
-        threadPool.shutdown();
-        try {
-            // Wait for exit
-            while (!threadPool.isTerminated()) {
-                log.debug("Waiting for threadpool to terminate");
-                Thread.sleep(1000);
-            }
-
-            //alert the output thread that the worker threads are done
-            searchExitFlag.set(true);
-
-            // Now, wait for the output thread to get done
-            outputThread.join();
-            log.info("DONE");
-        } catch (InterruptedException ex) {
-            log.info("Interrupted !!... exiting", ex);
         }
     }
 
@@ -151,5 +140,4 @@ public class DefaultDistributor implements SearchDistributor {
         searchExitFlag.set(true);
         hardExitFlag.set(true);
     }
-
 }

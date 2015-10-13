@@ -24,6 +24,7 @@ import org.apache.commons.scxml.SCXMLExpressionException;
 import org.apache.commons.scxml.model.Action;
 import org.apache.commons.scxml.model.ModelException;
 
+import java.io.Serializable;
 import java.math.BigDecimal;
 import java.util.ArrayList;
 import java.util.Collection;
@@ -35,7 +36,7 @@ import java.util.Map;
 /**
  * Yankop Yuriy
  */
-public class RangeExtension implements CustomTagExtension<RangeExtension.RangeTag> {
+public class RangeExtension implements CustomTagExtension<RangeExtension.RangeTag>, Serializable {
 
     public Class<RangeTag> getTagActionClass() {
         return RangeTag.class;
@@ -86,6 +87,7 @@ public class RangeExtension implements CustomTagExtension<RangeExtension.RangeTa
         for (Map<String, String> p : possibleStateList) {
             for (BigDecimal value : rangeValues) {
                 HashMap<String, String> n = new HashMap<>(p);
+                value = value.stripTrailingZeros();
                 n.put(variable, value.toString());
                 productTemp.add(n);
             }

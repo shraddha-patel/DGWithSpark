@@ -15,6 +15,7 @@
  */
 package org.finra.datagenerator.consumer;
 
+import java.io.Serializable;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.concurrent.atomic.AtomicBoolean;
@@ -24,7 +25,7 @@ import java.util.concurrent.atomic.AtomicBoolean;
  *
  * Created by RobbinBr on 5/18/2014.
  */
-public class DataPipe {
+public class DataPipe implements Serializable {
 
     private final Map<String, String> dataMap = new HashMap<>();
     private final DataConsumer dataConsumer;
@@ -80,28 +81,6 @@ public class DataPipe {
         for (String var : outTemplate) {
             if (b.length() > 0) {
                 b.append('|');
-            }
-            b.append(getDataMap().get(var));
-        }
-
-        return b.toString();
-    }
-
-    /**
-     * Given an array of variable names, returns a delimited {@link String}
-     * of values.
-     *
-     * @param outTemplate an array of {@link String}s containing the variable
-     * names.
-     * @param separator the delimiter to use
-     * @return a pipe delimited {@link String} of values
-     */
-    public String getDelimited(String[] outTemplate, String separator) {
-        StringBuilder b = new StringBuilder(1024);
-
-        for (String var : outTemplate) {
-            if (b.length() > 0) {
-                b.append(separator);
             }
             b.append(getDataMap().get(var));
         }

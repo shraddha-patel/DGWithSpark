@@ -17,15 +17,18 @@
 package org.finra.datagenerator
 
 import java._
-import java.io.{ObjectOutputStream, OutputStream}
+import java.io._
+import java.util.concurrent.atomic.AtomicBoolean
 
-import org.finra.datagenerator.consumer.{DataPipe, DataConsumer}
+import org.finra.datagenerator.consumer.{EquivalenceClassTransformer, DataPipe, DataConsumer}
+import org.finra.datagenerator.distributor.multithreaded.SingleThreadedProcessing
+import org.finra.datagenerator.samples.transformer.SampleMachineTransformer
 import org.finra.datagenerator.writer.{DefaultWriter, DataWriter}
 
 import scala.collection.JavaConverters._
 
 import org.apache.spark.{SparkConf, SparkContext}
-import org.finra.datagenerator.distributor.SearchDistributor
+import org.finra.datagenerator.distributor.{ProcessingStrategy, SearchDistributor}
 import org.finra.datagenerator.engine.Frontier
 
 /**
@@ -36,12 +39,22 @@ import org.finra.datagenerator.engine.Frontier
  *
  * Created by Brijesh on 6/2/2015.
  */
-class SparkDistributor(masterURL: String, scalaDataConsumer: ScalaDataConsumer) extends
+class SparkDistributor(masterURL: String) extends
   SearchDistributor with java.io.Serializable {
 
-  val flag: Boolean = true
+  //val flag: Boolean = true
+  var hardExitFlag = new AtomicBoolean(false)
+  var searchExitFlag = new AtomicBoolean(false)
 
-  val randomNumberQueue = new util.LinkedList[util.Map[String, String]]()
+  var threadCount: Int = 1
+  var maxNumberOfLines: Long = -1
+
+  var randomNumberQueue = new util.LinkedList[util.Map[String, String]]()
+
+  def setMaxNumberOfLines(numberOfLines: Long): SparkDistributor = {
+    this.maxNumberOfLines = numberOfLines
+    this
+  }
 
   /**
    * Set Data Consumer to consume output
@@ -50,6 +63,18 @@ class SparkDistributor(masterURL: String, scalaDataConsumer: ScalaDataConsumer) 
    * @return SearchDistributor
    */
   def setDataConsumer(dataConsumer: DataConsumer): SearchDistributor = {
+    dataConsumer.setExitFlag(hardExitFlag)
+    this
+  }
+
+  /**
+   * Sets the number of threads to use
+   *
+   * @param threadCount an int containing the thread count
+   * @return a reference to the current DefaultDistributor
+   */
+  def setThreadCount(threadCount: Int): SparkDistributor = {
+    this.threadCount = threadCount
     this
   }
 
@@ -64,70 +89,44 @@ class SparkDistributor(masterURL: String, scalaDataConsumer: ScalaDataConsumer) 
    */
   def distribute(frontierList: util.List[Frontier]): Unit = {
 
-    println("Frontier list size = " + (frontierList.size() - 1))  // scalastyle:ignore
-
-    val conf: SparkConf = new SparkConf().setMaster(masterURL).setAppName("dg-spark-example")
-
+    val conf: SparkConf = new SparkConf().setMaster(masterURL).setAppName("DataGenerator")
+    conf.set("spark.driver.allowMultipleContexts","true")
     val sparkContext: SparkContext = new SparkContext(conf)
 
-    /**
-     * Add jar file to resolve dependencies
-     * NOTE: if you change something compile maven file from command line using
-     * "mvn clean package"
-     */
-    sparkContext.addJar("./dg-spark/target/dg-spark-2.2-SNAPSHOT.jar")
+    //sparkContext.addJar("./dg-spark/target/dg-spark-2.2-SNAPSHOT.jar")
 
-      for (frontier <- frontierList.asScala) {
+    sparkContext.parallelize(1 to frontierList.size()).map {
+      i =>
 
-        sparkContext.parallelize(1 to RandomNumberEngine.numberInEachFrontier).map{
-          i =>
-            //Generate Random Number Parallel
-            searchWorker(frontier, randomNumberQueue, flag)
+        val out: OutputStream = new FileOutputStream("./dg-spark/out.txt")
 
-            //Call Consume method for parallel processing
-            produceOutput()
-            
-            0
-            
-        }.reduce(_ + _)
-      }
-  }
+        val dw: DefaultWriter = new DefaultWriter(out, Array[String]("var_1_1", "var_1_2", "var_1_3", "var_1_4", "var_1_5", "var_1_6",
+          "var_2_1", "var_2_2", "var_2_3", "var_2_4", "var_2_5", "var_2_6"))
 
-  /**
-   * While Queue is not empty
-   * Pop the elements from the Queue and give it to consume method
-   */
-  def produceOutput(): Unit = {
+        val dataConsumer: DataConsumer = new DataConsumer
 
-    var lines: Int = 0
+        dataConsumer.addDataTransformer(new SampleMachineTransformer)
 
-    val os: OutputStream = System.out
-    val objectOS = new ObjectOutputStream(os)
+        dataConsumer.addDataTransformer(new EquivalenceClassTransformer)
 
-    while(!randomNumberQueue.isEmpty) {
+        dataConsumer.addDataWriter(dw)
 
-      this.synchronized {
+        this.setDataConsumer(dataConsumer)
 
-        val maps = randomNumberQueue.remove()
+          val searchWorkerThread = new Thread() {
 
-        lines += scalaDataConsumer.consume(maps)
+            override def run(): Unit = {
 
-        println()  // scalastyle:ignore
-      }
-    }
-    println()  // scalastyle:ignore
-  }
+              for (frontier <- frontierList.asScala) {
 
-  /**
-   * Call the searchForScenario Method which generates random number
-   *
-   * @param frontier frontier object
-   * @param javaQueue Queue
-   * @param flag boolean
-   */
-  def searchWorker(frontier: Frontier, javaQueue: util.Queue[util.Map[String, String]], flag: Boolean): Unit = {
+                frontier.searchForScenarios(new SingleThreadedProcessing(dataConsumer,maxNumberOfLines), searchExitFlag)
+              }
+            }
+          }
+          searchWorkerThread.start()
 
-    frontier.searchForScenarios(javaQueue, null)   // scalastyle:ignore
+        0
 
+    }.reduce(_ + _)
   }
 }

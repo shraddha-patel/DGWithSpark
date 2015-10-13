@@ -51,10 +51,13 @@ import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
+import java.util.concurrent.atomic.AtomicBoolean;
+
+import static org.apache.commons.scxml.io.SCXMLParser.parse;
 
 /**
  * Engine implementation for generating data with SCXML state machine models.
- * 
+ * <p/>
  * Marshall Peters
  * Date: 8/25/14
  */
@@ -136,9 +139,11 @@ public class SCXMLEngine extends SCXMLExecutor implements Engine {
      * @throws ModelException if the desired bootstrap can not be reached
      */
     public List<PossibleState> bfs(int min) throws ModelException {
+
         List<PossibleState> bootStrap = new LinkedList<>();
 
         TransitionTarget initial = model.getInitialTarget();
+
         PossibleState initialState = new PossibleState(initial, fillInitialVariables());
         bootStrap.add(initialState);
 
@@ -203,7 +208,6 @@ public class SCXMLEngine extends SCXMLExecutor implements Engine {
                 }
             }
         }
-
         return bootStrap;
     }
 
@@ -250,7 +254,7 @@ public class SCXMLEngine extends SCXMLExecutor implements Engine {
      */
     public void setModelByInputFileStream(InputStream inputFileStream) {
         try {
-            this.model = SCXMLParser.parse(new InputSource(inputFileStream), null, customActionsFromTagExtensions());
+            this.model = parse(new InputSource(inputFileStream), null, customActionsFromTagExtensions());
             this.setStateMachine(this.model);
         } catch (IOException | SAXException | ModelException e) {
             e.printStackTrace();
@@ -265,7 +269,7 @@ public class SCXMLEngine extends SCXMLExecutor implements Engine {
     public void setModelByText(String model) {
         try {
             InputStream is = new ByteArrayInputStream(model.getBytes());
-            this.model = SCXMLParser.parse(new InputSource(is), null, customActionsFromTagExtensions());
+            this.model = parse(new InputSource(is), null, customActionsFromTagExtensions());
             this.setStateMachine(this.model);
         } catch (IOException | SAXException | ModelException e) {
             e.printStackTrace();

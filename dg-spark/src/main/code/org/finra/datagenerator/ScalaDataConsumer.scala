@@ -16,8 +16,12 @@
 
 package org.finra.datagenerator
 
+import java.io.OutputStream
+
 import org.finra.datagenerator.consumer.{DataPipe, DataConsumer}
 import java.util
+
+import org.finra.datagenerator.writer.DefaultWriter
 
 import scala.collection.JavaConversions._
 
@@ -28,11 +32,13 @@ import scala.collection.JavaConversions._
  */
 class ScalaDataConsumer extends DataConsumer with java.io.Serializable {
 
+
+  val os: OutputStream = System.out
   val scalaDataWriter = new ScalaDataWriter
 
   private val scalaDatawriters = new util.ArrayList[AnyRef]
 
-  val scalaDataPipe = new ScalaDataPipe
+  val scalaDataPipe = new DataPipe
 
   /**
    * Put key value pair into dataPipe,

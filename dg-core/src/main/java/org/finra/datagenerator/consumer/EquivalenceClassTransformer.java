@@ -16,10 +16,7 @@
 
 package org.finra.datagenerator.consumer;
 
-import java.io.BufferedReader;
-import java.io.IOException;
-import java.io.InputStream;
-import java.io.InputStreamReader;
+import java.io.*;
 import java.util.Map;
 import java.util.Random;
 import java.util.regex.Matcher;
@@ -29,7 +26,7 @@ import java.util.regex.Pattern;
  * Marshall Peters
  * Date: 9/10/14
  */
-public class EquivalenceClassTransformer implements DataTransformer {
+public class EquivalenceClassTransformer implements DataTransformer,Serializable {
 
     private Random random;
 

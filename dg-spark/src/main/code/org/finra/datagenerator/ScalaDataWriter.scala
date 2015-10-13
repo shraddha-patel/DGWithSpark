@@ -16,8 +16,7 @@
 
 package org.finra.datagenerator
 
-import java.io.OutputStream
-import java.io.ObjectOutputStream
+import java.io.{FileOutputStream, OutputStream, ObjectOutputStream}
 
 import org.finra.datagenerator.consumer.DataPipe
 import org.finra.datagenerator.writer.DataWriter
@@ -39,7 +38,9 @@ class ScalaDataWriter extends DataWriter with java.io.Serializable {
    */
   def writeOutput(dataPipe: DataPipe): Unit = {
 
-    val os: OutputStream = System.out
+    //val os: OutputStream = System.out
+
+    val os = new FileOutputStream("out.txt")
     val objectOS = new ObjectOutputStream(os)
 
     objectOS.write(dataPipe.getPipeDelimited(template).getBytes)

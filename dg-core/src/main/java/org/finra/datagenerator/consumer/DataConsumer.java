@@ -22,23 +22,22 @@ import org.finra.datagenerator.writer.DataWriter;
 import java.io.BufferedReader;
 import java.io.IOException;
 import java.io.InputStreamReader;
+import java.io.Serializable;
 import java.net.URL;
 import java.net.URLConnection;
 import java.util.ArrayList;
+import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
-import java.util.concurrent.Callable;
-import java.util.concurrent.ExecutorService;
-import java.util.concurrent.Executors;
-import java.util.concurrent.Future;
+import java.util.concurrent.*;
 import java.util.concurrent.atomic.AtomicBoolean;
 
 /**
  * Processes search results produced by a SearchDistributor.
- * 
+ * <p/>
  * Created by RobbinBr on 5/18/2014.
  */
-public class DataConsumer {
+public class DataConsumer implements Serializable {
 
     private static final Logger log = Logger.getLogger(DataConsumer.class);
     private DataPipe dataPipe;
@@ -49,7 +48,9 @@ public class DataConsumer {
     private long maxNumberOfLines = 10000;
 
     private String reportingHost;
-    private final ExecutorService threadPool = Executors.newFixedThreadPool(1);
+    private static final ExecutorService threadPool = Executors.newFixedThreadPool(1);
+
+    private AtomicBoolean guard = new AtomicBoolean(false);
 
     /**
      * Public default constructor
@@ -76,6 +77,7 @@ public class DataConsumer {
      * @return a reference to the current DataConsumer
      */
     public DataConsumer addDataWriter(DataWriter ow) {
+        if (guard.get()) throw new RuntimeException("Attempting to modify while guarded");
         this.dataWriters.add(ow);
         return this;
     }
@@ -140,7 +142,7 @@ public class DataConsumer {
         this.dataPipe = new DataPipe(this);
 
         // Set initial variables
-        for (Map.Entry<String, String> ent : initialVars.entrySet()) {
+        for (ConcurrentHashMap.Entry<String, String> ent : initialVars.entrySet()) {
             dataPipe.getDataMap().put(ent.getKey(), ent.getValue());
         }
 
@@ -157,7 +159,6 @@ public class DataConsumer {
                 log.error("Exception in DataWriter", e);
             }
         }
-
         return 1;
     }
 
@@ -173,6 +174,7 @@ public class DataConsumer {
         return sendRequest(path, null);
     }
 
+
     /**
      * Creates a future that will send a request to the reporting host and call
      * the handler with the response
@@ -182,6 +184,7 @@ public class DataConsumer {
      *                         and recieved
      * @return a {@link java.util.concurrent.Future} for handing the request
      */
+
     public Future<String> sendRequest(final String path, final ReportingHandler reportingHandler) {
         return threadPool.submit(new Callable<String>() {
             @Override
@@ -197,12 +200,15 @@ public class DataConsumer {
         });
     }
 
+
     /**
      * Sends a synchronous request to the reporting host returning the response
      *
      * @param path the path inside the reporting host to send the request to
      * @return a String containing the response
      */
+
+
     public String sendRequestSync(String path) {
         return getResponse(path);
     }

@@ -18,6 +18,7 @@ package org.finra.datagenerator.engine.scxml;
 
 import org.apache.commons.scxml.model.TransitionTarget;
 
+import java.io.Serializable;
 import java.util.Map;
 
 /**
@@ -27,7 +28,7 @@ import java.util.Map;
  * Marshall Peters
  * Date: 8/26/14
  */
-public class PossibleState {
+public class PossibleState implements Serializable {
     final TransitionTarget nextState;
     final Map<String, String> variables;
 

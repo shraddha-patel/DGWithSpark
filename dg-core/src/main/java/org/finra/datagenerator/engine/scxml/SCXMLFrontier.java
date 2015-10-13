@@ -16,6 +16,7 @@
 
 package org.finra.datagenerator.engine.scxml;
 
+import org.apache.commons.lang.ObjectUtils;
 import org.apache.commons.scxml.Context;
 import org.apache.commons.scxml.SCXMLExecutor;
 import org.apache.commons.scxml.SCXMLExpressionException;
@@ -27,14 +28,18 @@ import org.apache.commons.scxml.model.SCXML;
 import org.apache.commons.scxml.model.Transition;
 import org.apache.commons.scxml.model.TransitionTarget;
 import org.apache.log4j.Logger;
+import org.finra.datagenerator.consumer.DataConsumer;
+import org.finra.datagenerator.distributor.multithreaded.SingleThreadedProcessing;
 import org.finra.datagenerator.engine.Frontier;
 import org.finra.datagenerator.engine.scxml.tags.CustomTagExtension;
 
+import java.io.IOException;
 import java.util.HashMap;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
 import java.util.Queue;
+import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.atomic.AtomicBoolean;
 
 /**
@@ -48,6 +53,7 @@ public class SCXMLFrontier extends SCXMLExecutor implements Frontier {
     private final PossibleState root;
     private static final Logger log = Logger.getLogger(SCXMLFrontier.class);
     private List<CustomTagExtension> tagExtensionList;
+    private SingleThreadedProcessing singleThreadedProcessing;
 
     /**
      * Constructor
@@ -83,11 +89,86 @@ public class SCXMLFrontier extends SCXMLExecutor implements Frontier {
      * Performs a DFS on the model, starting from root, placing results in the queue
      * Just a public wrapper for private dfs function
      *
-     * @param queue the results queue
+     * @param singleThreadedProcessing
      * @param flag used to stop the search before completion
      */
-    public void searchForScenarios(Queue<Map<String, String>> queue, AtomicBoolean flag) {
-        dfs(queue, flag, root);
+    public void searchForScenarios(SingleThreadedProcessing singleThreadedProcessing, AtomicBoolean flag) throws IOException {
+        dfs(singleThreadedProcessing, flag, root);
+    }
+
+    /**
+     * Performs a DFS on the model, starting from root, placing results in the queue
+     * Just a public wrapper for private dfs function
+     *
+     * @param queue
+     * @param flag used to stop the search before completion
+     */
+    public void searchForScenarios(Queue<Map<String, String>> queue, AtomicBoolean flag) throws IOException {
+        dfs(queue,flag,root);
+    }
+
+    private void dfs(SingleThreadedProcessing singleThreadedProcessing, AtomicBoolean flag, PossibleState state) throws IOException {
+
+        if (flag.get()) {
+            return;
+        }
+
+        TransitionTarget nextState = state.nextState;
+
+        //run every action in series
+        List<Map<String, String>> product = new LinkedList<>();
+        product.add(new HashMap<String, String>(state.variables));
+
+        OnEntry entry = nextState.getOnEntry();
+        List<Action> actions = entry.getActions();
+
+        for (Action action : actions) {
+            for (CustomTagExtension tagExtension : tagExtensionList) {
+                if (tagExtension.getTagActionClass().isInstance(action)) {
+                    product = tagExtension.pipelinePossibleStates(action, product);
+                }
+            }
+        }
+
+        //go through every transition and see which of the products are valid, recursive searching on them
+        List<Transition> transitions = nextState.getTransitionsList();
+
+        for (Transition transition : transitions) {
+            String condition = transition.getCond();
+            TransitionTarget target = ((List<TransitionTarget>) transition.getTargets()).get(0);
+
+            for (Map<String, String> p : product) {
+                Boolean pass;
+
+                if (condition == null) {
+                    pass = true;
+                } else {
+                    //scrub the context clean so we may use it to evaluate transition conditional
+                    Context context = this.getRootContext();
+                    context.reset();
+
+                    //set up new context
+                    for (Map.Entry<String, String> e : p.entrySet()) {
+                        context.set(e.getKey(), e.getValue());
+                    }
+
+                    //evaluate condition
+                    try {
+                        pass = (Boolean) this.getEvaluator().eval(context, condition);
+                    } catch (SCXMLExpressionException ex) {
+                        pass = false;
+                    }
+                }
+
+                //transition condition satisfied, continue search recursively
+                if (pass) {
+                    PossibleState result = new PossibleState(target, p);
+                    dfs(singleThreadedProcessing, flag, result);
+                }
+
+                singleThreadedProcessing.processOutput(p);
+            }
+        }
     }
 
     private void dfs(Queue<Map<String, String>> queue, AtomicBoolean flag, PossibleState state) {
