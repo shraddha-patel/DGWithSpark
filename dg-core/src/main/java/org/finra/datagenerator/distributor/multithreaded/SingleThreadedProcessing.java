@@ -18,8 +18,11 @@ package org.finra.datagenerator.distributor.multithreaded;
 
 import org.finra.datagenerator.consumer.DataConsumer;
 import org.finra.datagenerator.distributor.ProcessingStrategy;
+import org.apache.log4j.Logger;
 
+import javax.xml.crypto.Data;
 import java.io.IOException;
+import java.io.Serializable;
 import java.util.Map;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicLong;
@@ -27,40 +30,84 @@ import java.util.concurrent.atomic.AtomicLong;
 /**
  * Created by Brijesh on 9/29/2015.
  */
-public class SingleThreadedProcessing implements ProcessingStrategy {
+public class SingleThreadedProcessing implements ProcessingStrategy,Serializable {
 
     private DataConsumer userDataOutput;
     private long maxNumberOfLines = -1;
-    private AtomicLong lines = new AtomicLong(1);
+    private AtomicLong lines = new AtomicLong(0);
     private AtomicBoolean hardExitFlag = new AtomicBoolean(false);
 
+    protected static final Logger log = Logger.getLogger(SingleThreadedProcessing.class);
     /**
      * Constructor
      *
-     * @param dataConsumer set DataConsumer
      * @param maximumNumberOfLines set maximumNumberOfLines
      */
-    public SingleThreadedProcessing(final DataConsumer dataConsumer, final long maximumNumberOfLines) {
-        userDataOutput = dataConsumer;
+    public SingleThreadedProcessing(final long maximumNumberOfLines) {
+        //userDataOutput = dataConsumer;
         maxNumberOfLines = maximumNumberOfLines;
     }
 
+    public SingleThreadedProcessing setDataConsumer(final DataConsumer dataConsumer) {
+        this.userDataOutput = dataConsumer;
+        dataConsumer.setExitFlag(hardExitFlag);
+        return this;
+    }
     /**
      * Pass the generated maps to consumer for processing
      *
      * @param map Map of String and String
      * @throws IOException Input Output exception
      */
-    public void processOutput(Map<String, String> map) throws IOException {
+    public void processOutput(Map<String, String> map, AtomicBoolean searchExitFlag) throws IOException {
 
+        long linesLong = lines.longValue();
+
+        while (!hardExitFlag.get() && maxNumberOfLines != -1 && linesLong <= maxNumberOfLines) {
+
+            linesLong += 1;
+            //System.out.println("LinesLong: " + linesLong);
+
+            if(map != null) {
+                userDataOutput.consume(map);
+            }
+        }
+        //hardExitFlag.set(true);
+    }
+}
+
+
+
+
+/*
+        long lines = 0;
         while (!hardExitFlag.get()) {
+            //Map<String, String> row = queue.poll();
+            if (map != null) {
+                lines += userDataOutput.consume(map);
+            } else {
+                if (searchExitFlag.get()) {
+                    break;
+                } else if (hardExitFlag.get()) {
+                    break;
+                }
+            }
 
-            userDataOutput.consume(map);
-            long linesLong = lines.getAndIncrement();
-            if (maxNumberOfLines != -1 && linesLong >= maxNumberOfLines) {
+            if (maxNumberOfLines != -1 && lines >= maxNumberOfLines) {
                 break;
             }
         }
+
+        if (searchExitFlag.get()) {
+            log.info("Exiting, search exit flag is true");
+        }
+
+        if (hardExitFlag.get()) {
+            log.info("Exiting, consumer exit flag is true");
+        }
+
+        searchExitFlag.set(true);
         hardExitFlag.set(true);
+
     }
-}
+*/

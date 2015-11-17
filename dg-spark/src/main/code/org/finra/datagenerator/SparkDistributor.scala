@@ -22,10 +22,9 @@ import java.util.concurrent.atomic.AtomicBoolean
 
 import org.finra.datagenerator.consumer.{EquivalenceClassTransformer, DataPipe, DataConsumer}
 import org.finra.datagenerator.distributor.multithreaded.SingleThreadedProcessing
+import org.finra.datagenerator.engine.scxml.{SCXMLFrontier, SCXMLEngine}
 import org.finra.datagenerator.samples.transformer.SampleMachineTransformer
 import org.finra.datagenerator.writer.{DefaultWriter, DataWriter}
-
-import scala.collection.JavaConverters._
 
 import org.apache.spark.{SparkConf, SparkContext}
 import org.finra.datagenerator.distributor.{ProcessingStrategy, SearchDistributor}
@@ -40,7 +39,7 @@ import org.finra.datagenerator.engine.Frontier
  * Created by Brijesh on 6/2/2015.
  */
 class SparkDistributor(masterURL: String) extends
-  SearchDistributor with java.io.Serializable {
+SearchDistributor with java.io.Serializable {
 
   //val flag: Boolean = true
   var hardExitFlag = new AtomicBoolean(false)
@@ -90,13 +89,62 @@ class SparkDistributor(masterURL: String) extends
   def distribute(frontierList: util.List[Frontier]): Unit = {
 
     val conf: SparkConf = new SparkConf().setMaster(masterURL).setAppName("DataGenerator")
-    conf.set("spark.driver.allowMultipleContexts","true")
+    conf.set("spark.driver.allowMultipleContexts", "true")
     val sparkContext: SparkContext = new SparkContext(conf)
 
+    println("Frontier List size: " + frontierList.size())
     //sparkContext.addJar("./dg-spark/target/dg-spark-2.2-SNAPSHOT.jar")
 
-    sparkContext.parallelize(1 to frontierList.size()).map {
+    //val frontierListArray = frontierList.toArray[frontierList]()
+
+    //sparkContext.parallelize(frontierList).map{}
+
+    sparkContext.parallelize(0 to (frontierList.size() - 1)).map {
       i =>
+
+        val out: OutputStream = new FileOutputStream("./dg-spark/out/out" + Math.random() + ".txt", true)
+
+        try {
+
+          val dw: DefaultWriter = new DefaultWriter(out, Array[String]("var_1_1", "var_1_2", "var_1_3", "var_1_4", "var_1_5", "var_1_6",
+            "var_2_1", "var_2_2", "var_2_3", "var_2_4", "var_2_5", "var_2_6"))
+
+          val dataConsumer: DataConsumer = new DataConsumer
+
+          dataConsumer.addDataTransformer(new SampleMachineTransformer)
+
+          dataConsumer.addDataTransformer(new EquivalenceClassTransformer)
+
+          dataConsumer.addDataWriter(dw)
+
+          this.setDataConsumer(dataConsumer)
+
+          //println("i value: " + i)
+
+          val frontier = frontierList.get(i)
+
+          frontier.searchForScenarios(new SingleThreadedProcessing(maxNumberOfLines), searchExitFlag)
+
+        }
+
+        finally {
+
+          out.close()
+
+        }
+
+        0
+
+    }.count()
+  }
+}
+
+
+
+
+/*
+    sparkContext.parallelize(0 to frontierList.size()).map {
+      i=>
 
         val out: OutputStream = new FileOutputStream("./dg-spark/out.txt")
 
@@ -113,20 +161,9 @@ class SparkDistributor(masterURL: String) extends
 
         this.setDataConsumer(dataConsumer)
 
-          val searchWorkerThread = new Thread() {
+        val frontier = frontierList.get(i)
 
-            override def run(): Unit = {
+        frontier.searchForScenarios(new SingleThreadedProcessing(dataConsumer,maxNumberOfLines), searchExitFlag)
 
-              for (frontier <- frontierList.asScala) {
-
-                frontier.searchForScenarios(new SingleThreadedProcessing(dataConsumer,maxNumberOfLines), searchExitFlag)
-              }
-            }
-          }
-          searchWorkerThread.start()
-
-        0
-
-    }.reduce(_ + _)
-  }
-}
+    }
+    */

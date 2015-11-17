@@ -39,29 +39,23 @@ public final class MainJava implements Serializable {
      * @param argv Command-line arguments for the example
      * @throws IOException IO Exception
      */
-
     public static void main(String[] argv) throws IOException {
-        
-        InputStream is = MainJava.class.getResourceAsStream("/samplemachine.xml");
 
-        try {
+        try (InputStream is = MainJava.class.getResourceAsStream("/samplemachine.xml")) {
+
             SCXMLEngine scxmlEngine = new SCXMLEngine();
 
             scxmlEngine.setModelByInputFileStream(is);
-            scxmlEngine.setBootstrapMin(2);
+            scxmlEngine.setBootstrapMin(1);
 
             String masterURL = "local[5]";
             //String masterURL = "spark://sandbox.hortonworks.com:7077";
 
-            SparkDistributor sparkDistributor = new SparkDistributor(masterURL);
+            SparkDistributorJava sparkDistributor = new SparkDistributorJava(masterURL);
 
-            sparkDistributor.setMaxNumberOfLines(100);
+            sparkDistributor.setMaxNumberOfLines(0);
             scxmlEngine.process(sparkDistributor);
 
-
-        } finally {
-
-            is.close();
         }
     }
 }

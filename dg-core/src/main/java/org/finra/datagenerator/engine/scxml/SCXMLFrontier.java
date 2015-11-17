@@ -91,7 +91,8 @@ public class SCXMLFrontier extends SCXMLExecutor implements Frontier {
      * @throws IOException io exception
      */
     public void searchForScenarios(SingleThreadedProcessing singleThreadedProcessing, AtomicBoolean flag) throws IOException {
-        dfs(singleThreadedProcessing, flag, root);
+            dfs(singleThreadedProcessing, flag, root);
+
     }
 
     /**
@@ -164,13 +165,30 @@ public class SCXMLFrontier extends SCXMLExecutor implements Frontier {
                     PossibleState result = new PossibleState(target, p);
                     dfs(singleThreadedProcessing, flag, result);
                 }
-
-                singleThreadedProcessing.processOutput(p);
             }
+        }
+
+        if(nextState.getId().equalsIgnoreCase("end")) {
+
+            System.out.println("State Variables: " + state.variables);
+
+            singleThreadedProcessing.processOutput(state.variables, flag);
+
+            /*
+            while (!hardExitFlag.get()) {
+                long linesLong = lines.getAndIncrement();
+                System.out.println(linesLong);
+                userDataOutput.consume(map);
+                if (maxNumberOfLines != -1 && linesLong >= maxNumberOfLines) {
+                    break;
+                }
+            }
+            hardExitFlag.set(true);
+            */
         }
     }
 
-    private void dfs(Queue<Map<String, String>> queue, AtomicBoolean flag, PossibleState state) {
+    private void dfs(Queue<Map<String, String>> queue, AtomicBoolean flag, PossibleState state) throws IOException {
         if (flag.get()) {
             return;
         }

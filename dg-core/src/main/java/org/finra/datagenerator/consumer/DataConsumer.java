@@ -22,6 +22,7 @@ import org.finra.datagenerator.writer.DataWriter;
 import java.io.BufferedReader;
 import java.io.IOException;
 import java.io.InputStreamReader;
+import java.io.Serializable;
 import java.net.URL;
 import java.net.URLConnection;
 import java.util.ArrayList;
@@ -38,7 +39,7 @@ import java.util.concurrent.atomic.AtomicBoolean;
  *
  * Created by RobbinBr on 5/18/2014.
  */
-public class DataConsumer {
+public class DataConsumer implements Serializable {
 
     private static final Logger log = Logger.getLogger(DataConsumer.class);
     private DataPipe dataPipe;
