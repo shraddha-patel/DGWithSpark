@@ -35,7 +35,6 @@ public final class MainJava implements Serializable {
 
     /**
      * Entry point for the example.
-     *
      * @param argv Command-line arguments for the example
      * @throws IOException IO Exception
      */
@@ -53,7 +52,7 @@ public final class MainJava implements Serializable {
 
             SparkDistributorJava sparkDistributor = new SparkDistributorJava(masterURL);
 
-            sparkDistributor.setMaxNumberOfLines(0);
+            sparkDistributor.setMaxNumberOfLines(40);
             scxmlEngine.process(sparkDistributor);
 
         }

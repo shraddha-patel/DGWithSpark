@@ -65,6 +65,8 @@ public class SingleThreadedProcessing implements ProcessingStrategy,Serializable
 
         while (!hardExitFlag.get() && maxNumberOfLines != -1 && linesLong <= maxNumberOfLines) {
 
+            System.out.println("Flag Value: " + hardExitFlag.get() + "and maximum number of line: " + maxNumberOfLines);
+
             linesLong += 1;
             //System.out.println("LinesLong: " + linesLong);
 

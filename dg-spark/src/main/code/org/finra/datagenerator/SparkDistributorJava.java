@@ -101,6 +101,8 @@ public class SparkDistributorJava implements SearchDistributor, Serializable {
 
         System.out.println("Frontier List size: " + frontierList.size());
 
+        System.setProperty("hadoop.home.dir", "C:\\winutil\\");
+
         JavaRDD<Boolean> mapJavaRDD = sc.parallelize(frontierList).map(new Function<Frontier, Boolean>() {
             @Override
             public Boolean call(Frontier frontier) throws Exception {
@@ -128,7 +130,10 @@ public class SparkDistributorJava implements SearchDistributor, Serializable {
             }
         });
 
+        // You need to change this path to your local machine path
+        String path = "C:\\Users\\Lipi Patel\\Desktop\\DG\\CSTPdg 28Nov\\dg-spark\\out\\output.txt";
+
+        mapJavaRDD.saveAsTextFile(path);
         mapJavaRDD.count();
-        //searchExitFlag.set(true);
     }
 }
