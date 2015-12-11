@@ -16,9 +16,11 @@
 
 package org.finra.datagenerator.engine;
 
+import org.finra.datagenerator.consumer.DataPipe;
 import org.finra.datagenerator.distributor.multithreaded.SingleThreadedProcessing;
 
 import java.io.IOException;
+import java.util.List;
 import java.util.Map;
 import java.util.Queue;
 import java.util.concurrent.atomic.AtomicBoolean;
@@ -40,7 +42,7 @@ public interface Frontier {
      * @param flag the exit flag
      * @throws IOException io exception
      */
-    void searchForScenarios(SingleThreadedProcessing singleThreadedProcessing, AtomicBoolean flag) throws IOException;
+    DataPipe searchForScenarios(SingleThreadedProcessing singleThreadedProcessing, AtomicBoolean flag) throws IOException; // changed
 
     /**
      * Fills the queue with Maps of variable assignments produced by a DFS strategy;

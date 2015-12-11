@@ -17,11 +17,16 @@
 package org.finra.datagenerator.distributor.multithreaded;
 
 import org.finra.datagenerator.consumer.DataConsumer;
+import org.finra.datagenerator.consumer.DataPipe;
 import org.finra.datagenerator.distributor.ProcessingStrategy;
 import org.apache.log4j.Logger;
+import org.finra.datagenerator.writer.DataWriter;
+import org.finra.datagenerator.writer.DefaultWriter;
 
 import javax.xml.crypto.Data;
+import java.io.FileOutputStream;
 import java.io.IOException;
+import java.io.OutputStream;
 import java.io.Serializable;
 import java.util.Map;
 import java.util.concurrent.atomic.AtomicBoolean;
@@ -36,6 +41,7 @@ public class SingleThreadedProcessing implements ProcessingStrategy,Serializable
     private long maxNumberOfLines = -1;
     private AtomicLong lines = new AtomicLong(0);
     private AtomicBoolean hardExitFlag = new AtomicBoolean(false);
+    private DataPipe dataPipe;
 
     protected static final Logger log = Logger.getLogger(SingleThreadedProcessing.class);
     /**
@@ -44,7 +50,6 @@ public class SingleThreadedProcessing implements ProcessingStrategy,Serializable
      * @param maximumNumberOfLines set maximumNumberOfLines
      */
     public SingleThreadedProcessing(final long maximumNumberOfLines) {
-        //userDataOutput = dataConsumer;
         maxNumberOfLines = maximumNumberOfLines;
     }
 
@@ -53,63 +58,27 @@ public class SingleThreadedProcessing implements ProcessingStrategy,Serializable
         dataConsumer.setExitFlag(hardExitFlag);
         return this;
     }
+
     /**
      * Pass the generated maps to consumer for processing
      *
      * @param map Map of String and String
      * @throws IOException Input Output exception
      */
-    public void processOutput(Map<String, String> map, AtomicBoolean searchExitFlag) throws IOException {
+    public DataPipe processOutput(Map<String, String> map, AtomicBoolean searchExitFlag) throws IOException {       //Updated by Shraddha Patel
 
         long linesLong = lines.longValue();
 
         while (!hardExitFlag.get() && maxNumberOfLines != -1 && linesLong <= maxNumberOfLines) {
 
-            System.out.println("Flag Value: " + hardExitFlag.get() + "and maximum number of line: " + maxNumberOfLines);
+            System.out.println("Flag Value: " + hardExitFlag.get() + " and maximum number of line: " + maxNumberOfLines);
 
             linesLong += 1;
-            //System.out.println("LinesLong: " + linesLong);
 
             if(map != null) {
-                userDataOutput.consume(map);
+                dataPipe = userDataOutput.consumeMap(map);
             }
         }
-        //hardExitFlag.set(true);
+        return dataPipe;
     }
 }
-
-
-
-
-/*
-        long lines = 0;
-        while (!hardExitFlag.get()) {
-            //Map<String, String> row = queue.poll();
-            if (map != null) {
-                lines += userDataOutput.consume(map);
-            } else {
-                if (searchExitFlag.get()) {
-                    break;
-                } else if (hardExitFlag.get()) {
-                    break;
-                }
-            }
-
-            if (maxNumberOfLines != -1 && lines >= maxNumberOfLines) {
-                break;
-            }
-        }
-
-        if (searchExitFlag.get()) {
-            log.info("Exiting, search exit flag is true");
-        }
-
-        if (hardExitFlag.get()) {
-            log.info("Exiting, consumer exit flag is true");
-        }
-
-        searchExitFlag.set(true);
-        hardExitFlag.set(true);
-
-    }
-*/

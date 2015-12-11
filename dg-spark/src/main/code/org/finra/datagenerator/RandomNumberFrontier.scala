@@ -61,7 +61,8 @@ class RandomNumberFrontier extends Frontier with java.io.Serializable {
     }
   }
 
-  override def searchForScenarios(singleThreadedProcessing: SingleThreadedProcessing, flag: AtomicBoolean) {
+  override def searchForScenarios(singleThreadedProcessing: SingleThreadedProcessing, flag: AtomicBoolean) : org.finra.datagenerator.consumer.DataPipe = {
     //dfs(null, consumer, flag, flag)
+    return null;
   }
 }

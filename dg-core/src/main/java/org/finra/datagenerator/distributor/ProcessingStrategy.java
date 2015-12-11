@@ -16,6 +16,8 @@
 
 package org.finra.datagenerator.distributor;
 
+import org.finra.datagenerator.consumer.DataPipe;
+
 import java.io.IOException;
 import java.util.Map;
 import java.util.concurrent.atomic.AtomicBoolean;
@@ -33,6 +35,6 @@ public interface ProcessingStrategy {
      * @throws IOException io Exception
      *
      */
-    void processOutput(Map<String, String> map, AtomicBoolean flag) throws IOException;
+    DataPipe processOutput(Map<String, String> map, AtomicBoolean flag) throws IOException;
 
 }

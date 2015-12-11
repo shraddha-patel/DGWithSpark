@@ -15,12 +15,14 @@ package org.finra.datagenerator;
  * limitations under the License.
  */
 
+import com.javafx.tools.doclets.formats.html.SourceToHTMLConverter;
 import org.apache.log4j.Logger;
 import org.apache.spark.SparkConf;
 import org.apache.spark.api.java.JavaRDD;
 import org.apache.spark.api.java.JavaSparkContext;
 import org.apache.spark.api.java.function.Function;
 import org.finra.datagenerator.consumer.DataConsumer;
+import org.finra.datagenerator.consumer.DataPipe;
 import org.finra.datagenerator.consumer.EquivalenceClassTransformer;
 import org.finra.datagenerator.distributor.SearchDistributor;
 import org.finra.datagenerator.distributor.multithreaded.SingleThreadedProcessing;
@@ -28,6 +30,7 @@ import org.finra.datagenerator.engine.Frontier;
 import org.finra.datagenerator.samples.transformer.SampleMachineTransformer;
 import org.finra.datagenerator.writer.DefaultWriter;
 
+import javax.xml.bind.SchemaOutputResolver;
 import java.io.FileOutputStream;
 import java.io.OutputStream;
 import java.io.Serializable;
@@ -101,39 +104,42 @@ public class SparkDistributorJava implements SearchDistributor, Serializable {
 
         System.out.println("Frontier List size: " + frontierList.size());
 
-        System.setProperty("hadoop.home.dir", "C:\\winutil\\");
+        final String[] outTemplate = new String[]{"var_1_1", "var_1_2", "var_1_3", "var_1_4", "var_1_5", "var_1_6",     //Added by Shraddha Patel
+                                            "var_2_1", "var_2_2", "var_2_3", "var_2_4", "var_2_5", "var_2_6"};
 
-        JavaRDD<Boolean> mapJavaRDD = sc.parallelize(frontierList).map(new Function<Frontier, Boolean>() {
+        JavaRDD<DataPipe> mapJavaRDD = sc.parallelize(frontierList).map(new Function<Frontier, DataPipe>() {        // Updated by Shraddha Patel
+
+            DataPipe dataPipe;
             @Override
-            public Boolean call(Frontier frontier) throws Exception {
+            public DataPipe call(Frontier frontier) throws Exception {                  // All comments by Shraddha Patel
 
-                try(OutputStream out = new FileOutputStream("./dg-spark/out/out" + Math.random() +".txt", true)) {
+            //    try(OutputStream out = new FileOutputStream("./dg-spark/out/out" + Math.random() +".txt", true)) {
 
-                    DefaultWriter dw = new DefaultWriter(out,
-                            new String[]{"var_1_1", "var_1_2", "var_1_3", "var_1_4", "var_1_5", "var_1_6",
-                                    "var_2_1", "var_2_2", "var_2_3", "var_2_4", "var_2_5", "var_2_6"});
+              //      DefaultWriter dw = new DefaultWriter(out, outTemplate);
 
                     dataConsumer.addDataTransformer(new SampleMachineTransformer());
 
                     dataConsumer.addDataTransformer(new EquivalenceClassTransformer());
 
-                    dataConsumer.addDataWriter(dw);
+              //      dataConsumer.addDataWriter(dw);
 
                     singleThreadedProcessing.setDataConsumer(dataConsumer);
 
                     setDataConsumer(dataConsumer);
 
-                    frontier.searchForScenarios(singleThreadedProcessing, searchExitFlag);
+                    dataPipe = frontier.searchForScenarios(singleThreadedProcessing, searchExitFlag);
 
-                }
-                return true;
+                    dataPipe.getPipeDelimited(outTemplate);
+
+          //      }
+                return dataPipe;                // All comments by Shraddha Patel
             }
         });
 
         // You need to change this path to your local machine path
-        String path = "C:\\Users\\Lipi Patel\\Desktop\\DG\\CSTPdg 28Nov\\dg-spark\\out\\output.txt";
+        String path = "/Users/k25469/projects/DGSaveAsTextFile/dg-spark/out/result.txt"; // Changed path
 
         mapJavaRDD.saveAsTextFile(path);
-        mapJavaRDD.count();
+
     }
 }
