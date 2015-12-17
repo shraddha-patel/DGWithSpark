@@ -33,7 +33,9 @@ import org.finra.datagenerator.distributor.multithreaded.SingleThreadedProcessin
 import org.finra.datagenerator.engine.Frontier;
 import org.finra.datagenerator.engine.scxml.tags.CustomTagExtension;
 
+import java.io.FileOutputStream;
 import java.io.IOException;
+import java.io.OutputStream;
 import java.util.HashMap;
 import java.util.LinkedList;
 import java.util.List;
@@ -53,7 +55,6 @@ public class SCXMLFrontier extends SCXMLExecutor implements Frontier {
     private static final Logger log = Logger.getLogger(SCXMLFrontier.class);
     private List<CustomTagExtension> tagExtensionList;
     private SingleThreadedProcessing singleThreadedProcessing;
-    private DataConsumer userDataOutput = new DataConsumer();
     private DataPipe dataPipe;
 
     /**
@@ -94,8 +95,8 @@ public class SCXMLFrontier extends SCXMLExecutor implements Frontier {
      * @param flag used to stop the search before completion
      * @throws IOException io exception
      */
-    public StringBuilder searchForScenarios(SingleThreadedProcessing singleThreadedProcessing, AtomicBoolean flag, String[] outTemplate) throws IOException {
-        return dfs(singleThreadedProcessing, flag, root, outTemplate);           // Updated by Shraddha Patel
+    public StringBuilder searchForScenarios(SingleThreadedProcessing singleThreadedProcessing, AtomicBoolean flag, String[] outTemplate, StringBuilder sb) throws IOException {
+        return dfs(singleThreadedProcessing, flag, root, outTemplate, sb);           // Updated by Shraddha Patel
     }
 
     /**
@@ -110,14 +111,13 @@ public class SCXMLFrontier extends SCXMLExecutor implements Frontier {
         dfs(queue, flag, root);
     }
 
-    private StringBuilder dfs(SingleThreadedProcessing singleThreadedProcessing, AtomicBoolean flag, PossibleState state, String[] outTemplate) throws IOException {
+    private StringBuilder dfs(SingleThreadedProcessing singleThreadedProcessing, AtomicBoolean flag, PossibleState state, String[] outTemplate, StringBuilder sb) throws IOException {
 
         /*if (flag.get()) {     // Updates and comments by Shraddha Patel
             return;
         }*/
 
         TransitionTarget nextState = state.nextState;
-        StringBuilder sb = new StringBuilder();
         //run every action in series
         List<Map<String, String>> product = new LinkedList<>();
         product.add(new HashMap<String, String>(state.variables));
@@ -166,20 +166,19 @@ public class SCXMLFrontier extends SCXMLExecutor implements Frontier {
                 //transition condition satisfied, continue search recursively
                 if (pass) {
                     PossibleState result = new PossibleState(target, p);
-                    dfs(singleThreadedProcessing, flag, result, outTemplate);
+                    dfs(singleThreadedProcessing, flag, result, outTemplate,sb);
                 }
             }
         }
 
         if(nextState.getId().equalsIgnoreCase("end")) {
 
-            System.out.println("State Variables: " + state.variables);
+            dataPipe = singleThreadedProcessing.processOutput(state.variables, flag);     // Added by Shraddha Patel
 
-            dataPipe = singleThreadedProcessing.processOutput(state.variables, flag);     // Commented this line
-
-            sb.append(dataPipe.getPipeDelimited(outTemplate));
+            sb.append(dataPipe.getPipeDelimited(outTemplate)).append("\n");                 // Added by Shraddha Patel
 
         }
+
         return sb;
     }
 

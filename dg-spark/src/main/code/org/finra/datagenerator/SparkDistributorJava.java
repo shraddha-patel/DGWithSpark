@@ -102,37 +102,33 @@ public class SparkDistributorJava implements SearchDistributor, Serializable {
 
         JavaSparkContext sc = new JavaSparkContext(conf);
 
-        System.out.println("Frontier List size: " + frontierList.size());
+ //       System.out.println("Frontier List size: " + frontierList.size());        // Comment by Shraddha Patel
 
         final String[] outTemplate = new String[]{"var_1_1", "var_1_2", "var_1_3", "var_1_4", "var_1_5", "var_1_6",     //Added by Shraddha Patel
                                             "var_2_1", "var_2_2", "var_2_3", "var_2_4", "var_2_5", "var_2_6"};
 
-        JavaRDD<StringBuilder> mapJavaRDD = sc.parallelize(frontierList).map(new Function<Frontier, StringBuilder>() {        // Updated by Shraddha Patel
 
-            DataPipe dataPipe;
+        JavaRDD<String> mapJavaRDD = sc.parallelize(frontierList).map(new Function<Frontier, String>() {        // Updated by Shraddha Patel
+
+            String finalResult;                         //Added by Shraddha Patel
+            StringBuilder sb = new StringBuilder();     //Added by Shraddha Patel
             @Override
-            public StringBuilder call(Frontier frontier) throws Exception {                  // All comments by Shraddha Patel
-
-            //    try(OutputStream out = new FileOutputStream("./dg-spark/out/out" + Math.random() +".txt", true)) {
-
-              //      DefaultWriter dw = new DefaultWriter(out, outTemplate);
+            public String call(Frontier frontier) throws Exception {                  // All comments by Shraddha Patel
 
                     dataConsumer.addDataTransformer(new SampleMachineTransformer());
 
                     dataConsumer.addDataTransformer(new EquivalenceClassTransformer());
 
-              //      dataConsumer.addDataWriter(dw);
-
                     singleThreadedProcessing.setDataConsumer(dataConsumer);
 
                     setDataConsumer(dataConsumer);
 
-                    StringBuilder sb = frontier.searchForScenarios(singleThreadedProcessing, searchExitFlag, outTemplate);
+                    sb = frontier.searchForScenarios(singleThreadedProcessing, searchExitFlag, outTemplate, sb);  //Updated by Shraddha Patel
 
-                    //String s = dataPipe.getPipeDelimited(outTemplate);
+                    if(sb != null)                                  // Added by Shraddha Patel
+                        finalResult = sb.toString();                // Added by Shraddha Patel
 
-          //      }
-                return sb;                // All comments by Shraddha Patel
+                return finalResult;
             }
         });
 

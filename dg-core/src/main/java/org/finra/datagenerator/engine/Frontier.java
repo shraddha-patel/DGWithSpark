@@ -42,7 +42,7 @@ public interface Frontier {
      * @param flag the exit flag
      * @throws IOException io exception
      */
-    StringBuilder searchForScenarios(SingleThreadedProcessing singleThreadedProcessing, AtomicBoolean flag, String[] outTemplate) throws IOException; // changed
+    StringBuilder searchForScenarios(SingleThreadedProcessing singleThreadedProcessing, AtomicBoolean flag, String[] outTemplate, StringBuilder sb) throws IOException; // changed
 
     /**
      * Fills the queue with Maps of variable assignments produced by a DFS strategy;

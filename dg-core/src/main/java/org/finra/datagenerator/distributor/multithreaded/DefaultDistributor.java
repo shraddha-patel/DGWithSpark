@@ -81,7 +81,7 @@ public class DefaultDistributor implements SearchDistributor {
     @Override
     public void distribute(List<Frontier> frontierList) {
 
-        // Start output thread (consumer)
+      /*  // Start output thread (consumer)
         Thread outputThread = new Thread() {
             @Override
             public void run() {
@@ -109,7 +109,7 @@ public class DefaultDistributor implements SearchDistributor {
             Runnable worker = null;
             worker = new SearchWorker(frontier, queue, searchExitFlag);
             threadPool.execute(worker);
-        }
+        }*/
     }
 
     private void produceOutput() throws IOException {
