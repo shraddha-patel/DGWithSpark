@@ -42,6 +42,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Queue;
 import java.util.concurrent.atomic.AtomicBoolean;
+import java.util.concurrent.atomic.AtomicLong;
 
 /**
  * Frontier implementation for generating data with SCXML state machine models.
@@ -56,6 +57,7 @@ public class SCXMLFrontier extends SCXMLExecutor implements Frontier {
     private List<CustomTagExtension> tagExtensionList;
     private SingleThreadedProcessing singleThreadedProcessing;
     private DataPipe dataPipe;
+    private long maxNumberOfLines = -1;
 
     /**
      * Constructor
@@ -116,6 +118,7 @@ public class SCXMLFrontier extends SCXMLExecutor implements Frontier {
         /*if (flag.get()) {     // Updates and comments by Shraddha Patel
             return;
         }*/
+        maxNumberOfLines = singleThreadedProcessing.getMaximumNumberOfLines();
 
         TransitionTarget nextState = state.nextState;
         //run every action in series
@@ -170,13 +173,11 @@ public class SCXMLFrontier extends SCXMLExecutor implements Frontier {
                 }
             }
         }
-
         if(nextState.getId().equalsIgnoreCase("end")) {
-
+            String[] numOfLines = sb.toString().split("\\n");                             // Added by Shraddha Patel
             dataPipe = singleThreadedProcessing.processOutput(state.variables, flag);     // Added by Shraddha Patel
-
-            sb.append(dataPipe.getPipeDelimited(outTemplate)).append("\n");                 // Added by Shraddha Patel
-
+            if(numOfLines.length < maxNumberOfLines)                                      // Added by Shraddha Patel
+                sb.append(dataPipe.getPipeDelimited(outTemplate)).append("\n");           // Added by Shraddha Patel
         }
 
         return sb;

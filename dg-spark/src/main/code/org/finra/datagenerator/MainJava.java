@@ -45,14 +45,14 @@ public final class MainJava implements Serializable {
             SCXMLEngine scxmlEngine = new SCXMLEngine();
 
             scxmlEngine.setModelByInputFileStream(is);
-            scxmlEngine.setBootstrapMin(1);
+            scxmlEngine.setBootstrapMin(2);
 
             String masterURL = "local[5]";
             //String masterURL = "spark://sandbox.hortonworks.com:7077";
 
             SparkDistributorJava sparkDistributor = new SparkDistributorJava(masterURL);
 
-            sparkDistributor.setMaxNumberOfLines(0);  // Changed from 40 to 0
+            sparkDistributor.setMaxNumberOfLines(50);  // Changed from 40 to 0
             scxmlEngine.process(sparkDistributor);
 
         }

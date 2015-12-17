@@ -52,7 +52,9 @@ public class SingleThreadedProcessing implements ProcessingStrategy,Serializable
     public SingleThreadedProcessing(final long maximumNumberOfLines) {
         maxNumberOfLines = maximumNumberOfLines;
     }
-
+    public final long getMaximumNumberOfLines() {
+        return maxNumberOfLines;
+    }
     public SingleThreadedProcessing setDataConsumer(final DataConsumer dataConsumer) {
         this.userDataOutput = dataConsumer;
         dataConsumer.setExitFlag(hardExitFlag);
@@ -69,9 +71,7 @@ public class SingleThreadedProcessing implements ProcessingStrategy,Serializable
 
         long linesLong = lines.longValue();
 
-        while (!hardExitFlag.get() && maxNumberOfLines != -1 && linesLong <= maxNumberOfLines) {
-
-            System.out.println("Flag Value: " + hardExitFlag.get() + " and maximum number of line: " + maxNumberOfLines);
+        while (!hardExitFlag.get() && maxNumberOfLines != -1 && linesLong < maxNumberOfLines) {
 
             linesLong += 1;
 
