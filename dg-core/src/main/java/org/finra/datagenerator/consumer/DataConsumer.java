@@ -26,12 +26,10 @@ import java.io.Serializable;
 import java.net.URL;
 import java.net.URLConnection;
 import java.util.ArrayList;
+import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
-import java.util.concurrent.Callable;
-import java.util.concurrent.ExecutorService;
-import java.util.concurrent.Executors;
-import java.util.concurrent.Future;
+import java.util.concurrent.*;
 import java.util.concurrent.atomic.AtomicBoolean;
 
 /**
@@ -43,14 +41,14 @@ public class DataConsumer implements Serializable {
 
     private static final Logger log = Logger.getLogger(DataConsumer.class);
     private DataPipe dataPipe;
-    private final List<DataTransformer> dataTransformers = new ArrayList<>();
+    private final List<DataTransformer> dataTransformers = new CopyOnWriteArrayList<>();
     private final List<DataWriter> dataWriters = new ArrayList<>();
     private AtomicBoolean hardExitFlag;
 
     private long maxNumberOfLines = 10000;
 
     private String reportingHost;
-    private final ExecutorService threadPool = Executors.newFixedThreadPool(1);
+    //private final ExecutorService threadPool = Executors.newFixedThreadPool(1);
 
     /**
      * Public default constructor
@@ -184,7 +182,8 @@ public class DataConsumer implements Serializable {
      * @return a {@link java.util.concurrent.Future} for handing the request
      */
     public Future<String> sendRequest(final String path, final ReportingHandler reportingHandler) {
-        return threadPool.submit(new Callable<String>() {
+        return null;
+                /*threadPool.submit(new Callable<String>() {
             @Override
             public String call() {
                 String response = getResponse(path);
@@ -196,6 +195,7 @@ public class DataConsumer implements Serializable {
                 return response;
             }
         });
+        */
     }
 
     /**
@@ -236,8 +236,21 @@ public class DataConsumer implements Serializable {
         }
 
         // Call transformers
-        for (DataTransformer dc : dataTransformers) {
+        /*
+        for (Iterator<DataTransformer> it = dataTransformers.iterator(); it.hasNext();) {
+            DataTransformer dc = it.next();
             dc.transform(dataPipe);
+            //it.remove();
+        }
+        */
+
+        Iterator<DataTransformer> it = dataTransformers.iterator();
+        while(it.hasNext()) {
+
+            DataTransformer dc = it.next();
+
+            dc.transform(dataPipe);
+            //it.remove();
         }
 
         return dataPipe;

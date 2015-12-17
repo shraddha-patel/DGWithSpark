@@ -94,8 +94,8 @@ public class SCXMLFrontier extends SCXMLExecutor implements Frontier {
      * @param flag used to stop the search before completion
      * @throws IOException io exception
      */
-    public DataPipe searchForScenarios(SingleThreadedProcessing singleThreadedProcessing, AtomicBoolean flag) throws IOException {
-        return dfs(singleThreadedProcessing, flag, root);           // Updated by Shraddha Patel
+    public StringBuilder searchForScenarios(SingleThreadedProcessing singleThreadedProcessing, AtomicBoolean flag, String[] outTemplate) throws IOException {
+        return dfs(singleThreadedProcessing, flag, root, outTemplate);           // Updated by Shraddha Patel
     }
 
     /**
@@ -110,14 +110,14 @@ public class SCXMLFrontier extends SCXMLExecutor implements Frontier {
         dfs(queue, flag, root);
     }
 
-    private DataPipe dfs(SingleThreadedProcessing singleThreadedProcessing, AtomicBoolean flag, PossibleState state) throws IOException {
+    private StringBuilder dfs(SingleThreadedProcessing singleThreadedProcessing, AtomicBoolean flag, PossibleState state, String[] outTemplate) throws IOException {
 
         /*if (flag.get()) {     // Updates and comments by Shraddha Patel
             return;
         }*/
 
         TransitionTarget nextState = state.nextState;
-
+        StringBuilder sb = new StringBuilder();
         //run every action in series
         List<Map<String, String>> product = new LinkedList<>();
         product.add(new HashMap<String, String>(state.variables));
@@ -166,7 +166,7 @@ public class SCXMLFrontier extends SCXMLExecutor implements Frontier {
                 //transition condition satisfied, continue search recursively
                 if (pass) {
                     PossibleState result = new PossibleState(target, p);
-                    dfs(singleThreadedProcessing, flag, result);
+                    dfs(singleThreadedProcessing, flag, result, outTemplate);
                 }
             }
         }
@@ -177,8 +177,10 @@ public class SCXMLFrontier extends SCXMLExecutor implements Frontier {
 
             dataPipe = singleThreadedProcessing.processOutput(state.variables, flag);     // Commented this line
 
+            sb.append(dataPipe.getPipeDelimited(outTemplate));
+
         }
-        return dataPipe;
+        return sb;
     }
 
     private void dfs(Queue<Map<String, String>> queue, AtomicBoolean flag, PossibleState state) throws IOException {

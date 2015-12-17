@@ -94,12 +94,14 @@ public class DefaultDistributor implements SearchDistributor {
         };
         outputThread.start();
 
+        String[] outTemp = new String[]{"var_1_1", "var_1_2", "var_1_3", "var_1_4", "var_1_5", "var_1_6",     //Added by Shraddha Patel
+                "var_2_1", "var_2_2", "var_2_3", "var_2_4", "var_2_5", "var_2_6"};
         // Start search threads (producers)
         ExecutorService threadPool = Executors.newFixedThreadPool(threadCount);
         for (Frontier frontier : frontierList) {
 
             try {
-                frontier.searchForScenarios(new SingleThreadedProcessing(maxNumberOfLines), searchExitFlag);
+                frontier.searchForScenarios(new SingleThreadedProcessing(maxNumberOfLines), searchExitFlag, outTemp);
             } catch (IOException e) {
                 e.printStackTrace();
             }

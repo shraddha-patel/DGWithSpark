@@ -18,6 +18,7 @@ package org.finra.datagenerator.consumer;
 import java.io.Serializable;
 import java.util.HashMap;
 import java.util.Map;
+import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.atomic.AtomicBoolean;
 
 /**
@@ -27,7 +28,7 @@ import java.util.concurrent.atomic.AtomicBoolean;
  */
 public class DataPipe implements Serializable {
 
-    private final Map<String, String> dataMap = new HashMap<>();
+    private final ConcurrentHashMap<String, String> dataMap = new ConcurrentHashMap<>();
     private final DataConsumer dataConsumer;
 
     /**
@@ -63,7 +64,7 @@ public class DataPipe implements Serializable {
         return this.dataConsumer;
     }
 
-    public Map<String, String> getDataMap() {
+    public ConcurrentHashMap<String, String> getDataMap() {
         return dataMap;
     }
 

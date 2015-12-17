@@ -15,7 +15,7 @@ package org.finra.datagenerator;
  * limitations under the License.
  */
 
-import com.javafx.tools.doclets.formats.html.SourceToHTMLConverter;
+//import com.javafx.tools.doclets.formats.html.SourceToHTMLConverter;
 import org.apache.log4j.Logger;
 import org.apache.spark.SparkConf;
 import org.apache.spark.api.java.JavaRDD;
@@ -107,11 +107,11 @@ public class SparkDistributorJava implements SearchDistributor, Serializable {
         final String[] outTemplate = new String[]{"var_1_1", "var_1_2", "var_1_3", "var_1_4", "var_1_5", "var_1_6",     //Added by Shraddha Patel
                                             "var_2_1", "var_2_2", "var_2_3", "var_2_4", "var_2_5", "var_2_6"};
 
-        JavaRDD<DataPipe> mapJavaRDD = sc.parallelize(frontierList).map(new Function<Frontier, DataPipe>() {        // Updated by Shraddha Patel
+        JavaRDD<StringBuilder> mapJavaRDD = sc.parallelize(frontierList).map(new Function<Frontier, StringBuilder>() {        // Updated by Shraddha Patel
 
             DataPipe dataPipe;
             @Override
-            public DataPipe call(Frontier frontier) throws Exception {                  // All comments by Shraddha Patel
+            public StringBuilder call(Frontier frontier) throws Exception {                  // All comments by Shraddha Patel
 
             //    try(OutputStream out = new FileOutputStream("./dg-spark/out/out" + Math.random() +".txt", true)) {
 
@@ -127,17 +127,17 @@ public class SparkDistributorJava implements SearchDistributor, Serializable {
 
                     setDataConsumer(dataConsumer);
 
-                    dataPipe = frontier.searchForScenarios(singleThreadedProcessing, searchExitFlag);
+                    StringBuilder sb = frontier.searchForScenarios(singleThreadedProcessing, searchExitFlag, outTemplate);
 
-                    dataPipe.getPipeDelimited(outTemplate);
+                    //String s = dataPipe.getPipeDelimited(outTemplate);
 
           //      }
-                return dataPipe;                // All comments by Shraddha Patel
+                return sb;                // All comments by Shraddha Patel
             }
         });
 
         // You need to change this path to your local machine path
-        String path = "/Users/k25469/projects/DGSaveAsTextFile/dg-spark/out/result.txt"; // Changed path
+        String path = "./dg-spark/out/result.txt"; // Changed path
 
         mapJavaRDD.saveAsTextFile(path);
 
